@@ -1,0 +1,591 @@
+<!-- Martine Chapuis - 16 fevrier 2019 - CRM web developer test @ Game_Company
+
+HOW TO:
+copy/paste this file path in browser to view. Ex: file:///YOUR_PATH/index.html
+
+INFO/DESCRIPTION:
+1- Made with vue.js and bootstrap.
+2- The email is decomposed into vue.js component instantiated in the HTML body
+3- Script and HTML is on the same page for this test
+
+-->
+
+<!DOCTYPE html>
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+</head>
+<body>
+    <div id="app">
+        <div class="container-fluid" :style="responsiveContainer">
+            <top-bar-information></top-bar-information>
+            <image-banner></image-banner>
+            <div :style="subcontainer">
+                <cart-number-of-items></cart-number-of-items>
+                <item-in-cart 
+                    logo="images/ACOD_img.jpg"
+                    title="Assassin' Creed Odyssey"
+                    edition="Standard Edition"
+                    platform="PC (Download)"
+                    total="C$ 79.99"
+                    old=""
+                    esrb="images/ESRB_M_img.jpg">
+                </item-in-cart>
+                <item-in-cart
+                    logo="images/image1.jpg"
+                    title="Assassin's Creed Odyssey Spear Necklace"
+                    edition=""
+                    platform=""
+                    total="29.99"
+                    old="39.99"
+                    esrb="">
+                </item-in-cart>
+                <subtotal-component></subtotal-component>
+                <checkout-now-component></checkout-now-component>
+            </div>
+            <hit-a-roadblock-component></hit-a-roadblock-component>
+            <links-information></links-information>
+            <div :style="blackSubcontainer">
+                <logo-Game_Company></logo-Game_Company>
+                <logo-social></logo-social>
+                <credits></credits>
+                <links-unsub-policy-view></links-unsub-policy-view>
+            </div>
+        </div>
+    </div>
+</body>
+
+<script src="https://cdn.jsdelivr.net/npm/vue"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script>
+    // Enable vue.js debug tool in browser
+    Vue.config.devtools = true
+
+    // Top grey bar information at the top of the page
+    Vue.component('top-bar-information',{
+        data:function(){
+            return{
+                styleObjectTopGrey:{
+                    fontSize: '1em',
+                    backgroundColor: '#E6E9F2',
+                    paddingTop: '10px',
+                    paddingLeft: '10px',
+                    paddingBottom: '10px'
+                },
+                msg:'We noticed you left something in your cart'
+            };
+        },
+        template: '<div :style="styleObjectTopGrey">\
+                        <p>{{msg}}</p>\
+                    </div>',
+    });
+
+    // Banner image
+    Vue.component('image-banner',{
+        data:function(){
+            return{
+                windowWidth: "",
+                myBannerImage : 'not set'
+            };
+        },
+        created(){
+            window.addEventListener('resize', this.handleResize)
+            window.addEventListener('resize', this.setBannerImage)
+            this.handleResize();
+            this.setBannerImage();
+        },
+        destroyed() {
+            window.removeEventListener('resize', this.handleResize)
+        },
+        methods:{
+            setBannerImage: function(){
+                if(this.windowWidth > 960){
+                    this.myBannerImage = 'images/banner_img.jpg'
+                }else{
+                    this.myBannerImage = 'images/banner_img_mob.jpg'
+                }
+            },
+            handleResize: function(){
+                this.windowWidth = window.innerWidth;
+            }
+        },
+        template: '<img :src="myBannerImage" class="img-fluid"></img>',
+    });
+
+    // Bue bar: number of items in the cart
+    Vue.component('cart-number-of-items',{
+        data:function(){
+            return{
+                numb: 2, // this number would be updated dynamically
+                myBlueRow:{
+                    color: '#ffffff',
+                    backgroundColor: '#32C3D5',
+                    padding: '20px',
+                    fontSize: '1.3em'
+                }
+            }
+        },
+        template: '<div class="col-sm-12" :style="myBlueRow">\
+                        <strong>CART</strong> {{numb}} items\
+                    </div>'
+    });
+
+    // Item in cart 
+    Vue.component('item-in-cart',{
+        template:'<div :style="myItem" class="row">\
+                    <div :style="myItemImageContainer" class="col-4">\
+                            <img :src="logo" class="img-fluid" :style="_myItemImage"></img>\
+                    </div>\
+                    <div :style="[myItemContainer, lastRow]" class="col-8">\
+                        <div class="row">\
+                            <div class="col-12">\
+                                <p :style="_title" >{{title}}\
+                                <br><span :style="_edition">{{edition || ""}}</span></p>\
+                                <p v-if=platform>Platform: <a href="">{{platform}}</a></p>\
+                                <p v-else><br></p>\
+                                <p>Quantity: {{quant}}</p><br>\
+                            </div>\
+                        </div>\
+                        <div class="row">\
+                            <div class="col-6">\
+                                <div class="short-div">\
+                                    <p :style="_total">C$ {{total}}\
+                                    <span v-if=old><strike>{{old}}</strike></span></p>\
+                                </div>\
+                                <div class="short-div">\
+                                    <p><a href="">Edit</a></p>\
+                                </div>\
+                            </div>\
+                            <div class="col-6">\
+                                <p v-if=esrb><img :src="esrb" class="float-right"></img></p>\
+                            </div>\
+                        </div>\
+                    </div>\
+                </div>',
+        props:['logo','title','edition','platform','total','old','esrb'],
+        computed:{
+            _title:function(){
+                return 'fontWeight: bold; fontSize:1.4em';
+            },
+            _edition:function(){
+                return 'fontSize: 0.8em; color: #c2c2d6; line-height: 50%;';
+            },
+            _total:function(){
+                return 'fontSize: 1.2em'
+            },
+            _myItemImage:function(){
+                return 'maxWidth: "100%"; height:100%'
+            }
+        },
+        data:function(){
+            return{
+                myItem:{
+                    backgroundColor: '#ffffff',
+                    margin: '0px',
+                    marginTop: '10px',
+                    maxWidth: '100%',
+                    height: '100%'
+                },
+                myItemImageContainer:{
+                    minWidth:'250px',
+                    padding:'0px'
+                },
+                myItemImage:{
+                    maxWidth: '100%',
+                    height: 'auto'
+                },
+                myItemContainer:{
+                    backgroundColor: '#ffffff',
+                    padding: '30px 30px 30px 30px',
+                    fontSize: '1.5em',
+                    flexGrow: 2
+                },
+                lastRow:{
+                    bottom: '0',
+                    right: '0'
+                },
+                quant:1 // this number should be dynamic in a shop system
+            };
+        }
+
+    });
+    
+    // subtotal
+    Vue.component('subtotal-component',{
+        data:function(){
+            return{
+                elem: [79.99, 29.99], // should fetch total dynamically
+                subtotal:0,
+                myGreyRow:{
+                    backgroundColor: '#F3F4F8',
+                    padding: '30px 30px 30px 30px',
+                    marginTop: '10px',
+                    fontSize: '1.7em'
+                }
+            }
+        },
+        computed:{
+                textField:function(){
+                    return "padding:0;margin:0;"
+                }
+        },
+        methods:{
+            calculateSubTotal:function(){
+                for(i in this.elem){
+                    this.subtotal+=this.elem[i];
+                    this.subtotal = Number(this.subtotal.toFixed(2));
+                }
+            }
+        },
+        created(){
+            this.calculateSubTotal();
+        },
+        template: '<div class="col-xs-12" :style="myGreyRow">\
+                        <div class="row" >\
+                            <div class="col-6" >\
+                                <p :style="textField" class="text-left">SUBTOTAL</p>\
+                            </div>\
+                            <div class="col-6">\
+                                <p :style="textField" class="text-right">C$ {{subtotal}}</p>\
+                            </div>\
+                        </div>\
+                    </div>'
+    });
+
+    // 100% secure payment and CHECKOUT NOW button
+    Vue.component('checkout-now-component',{
+        data:function(){
+            return{
+                myCheckoutRow:{
+                    padding: '30px 30px 30px 30px',
+                    marginTop: '10px',
+                },
+                windowWidth: "",
+                checkoutimg : 'images/cta_img1.png',
+                secureimg: 'images/image2.png',
+                myCheckoutButton:{
+                    display:'block',
+                    marginLeft:'auto',
+                    marginRight:'auto'
+                },
+                mySecure:{
+                    fontSize:'1.5em',
+                    padding:'0',
+                    lineHeight:'20px'
+                }
+            }
+        },
+        computed:{
+            elemAlign:function(){
+                if(this.windowWidth > 990){
+                    return 'textAlign: left; paddingTop:20px'
+                }else{
+                    return 'textAlign: center; paddingTop: 20px'
+                }
+            }
+        },
+        mounted(){
+            window.onresize = () => {
+                this.windowWidth =  window.innerWidth;
+                this.elemAlign();
+            }
+        },
+        beforeMount(){
+            this.windowWidth = window.innerWidth;
+        },
+        template: '<div class="row" :style="myCheckoutRow">\
+                        <div :style="mySecure" class="col-md-12 col-lg-8">\
+                            <p :style="elemAlign"><img :src="secureimg"></img>\
+                            100% SECURE PAYMENT</p>\
+                        </div>\
+                        <div class="col-md-12 col-lg-4">\
+                            <img :style="myCheckoutButton" :src="checkoutimg" class="img-fluid"></img>\
+                        </div>\
+                    </div>'
+    });
+
+    // Hit a roadblock?
+    Vue.component('hit-a-roadblock-component',{
+        data:function(){
+            return{
+                myhitRoad:{
+                    backgroundColor: '#32C3D5',
+                    padding: '20px',
+                    maxWidth: '1200px',
+                    width: '100%',
+                    margin:'0px',
+                    textAlign: 'center'
+                },
+                suportLink:{
+                    textAlign: 'left',
+                    display:'inline-block',
+                    color: 'white',
+                    textDecoration: 'underline'
+                },
+                textStyle:{
+                    fontSize:'1.2em',
+                    paddingTop: '20px'
+                }
+            }
+        },
+        template:'<div class="row justify-content-md-center" :style="myhitRoad">\
+                    <div class="col">\
+                        <img scr="images/spacer.gif"></img>\
+                    </div>\
+                    <div class="col-6">\
+                        <p :style="textStyle">Hit a roadblock? We\'re here to help <a :style="suportLink" href="">support.ubi.com</a></p>\
+                    </div>\
+                    <div class="col">\
+                        <img scr="images/spacer.gif"></img>\
+                    </div>\
+                </div>'
+    });
+
+    // Links for more information
+    Vue.component('links-information',{
+        data:function(){
+            return{
+                myLinks:{
+                    backgroundColor: '#ffffff',
+                    fontSize:'1em',
+                    color:'#55B5C6',
+                    textDecoration:'underline',
+                    paddingTop:'20px',
+                    textAlign:'center',
+                    maxWidth:'1200px',
+                    margin:'0px',
+                    width:'100%',
+                    whiteSpace: 'nowrap'
+                }
+            }
+        },
+        template:'<div class="row" :style="myLinks">\
+                    <div class="col">\
+                        <img scr="images/spacer.gif"></img>\
+                    </div>\
+                    <div class="col-8">\
+                        <div class="row" >\
+                            <div class="col-lg-2 col-xs-12">\
+                                <p><a href="">My Account</a></p>\
+                            </div>\
+                            <div class="col d-none d-lg-block">\
+                                <p>|</p>\
+                            </div>\
+                            <div class="col-lg-4 col-xs-12">\
+                                <p><a href="">Return and Replacement Policy</a></p>\
+                            </div>\
+                            <div class="col d-none d-lg-block">\
+                                <p>|</p>\
+                            </div>\
+                            <div class="col-lg-2 col-xs-12">\
+                                <p><a href="">FAQ/Help</a></p>\
+                            </div>\
+                            <div class="col d-none d-lg-block">\
+                                <p>|</p>\
+                            </div>\
+                            <div class="col-lg-2 col-xs-12">\
+                                <p><a href="">Customer Support</a></p>\
+                            </div>\
+                        </div>\
+                    </div>\
+                    <div class="col">\
+                        <img scr="images/spacer.gif"></img>\
+                    </div>\
+                </div>'
+    });
+
+    // logo Game_Company / club / store
+    Vue.component('logo-Game_Company',{
+        data:function(){
+            return{
+                myCredits:{
+                    backgroundColor:'black',
+                    padding: '40px',
+                    maxWidth: '1200px',
+                    width: '100%',
+                    margin:'0px',
+                },
+                ubiLogo:{
+                    marginLeft: 'auto',
+                    marginRight: 'auto',
+                    display:'block'
+                }
+            }
+        },
+        template:'<div class="row justify-content-md-center" :style="myCredits">\
+                        <div class="col">\
+                            <img align="right" src="images/logo3.jpg"></img>\
+                        </div>\
+                        <div class="col">\
+                            <img :style="ubiLogo" src="images/logo1.jpg"></img>\
+                        </div>\
+                        <div class="col">\
+                            <img src="images/logo2.jpg"></img>\
+                        </div>\
+                </div>'
+    });
+
+    // logo social network
+    Vue.component('logo-social',{
+        data:function(){
+            return{
+                myCredits:{
+                    backgroundColor:'black',
+                    padding: '40px',
+                    maxWidth: '1200px',
+                    width: '100%',
+                    margin:'0px',
+                    textAlign: 'center'
+                }
+            }
+        },
+        template:'<div class="row justify-content-md-center" :style="myCredits">\
+                    <div class="col">\
+                        <img scr="images/spacer.gif"></img>\
+                    </div>\
+                    <div class="col-4-lg col-6-md col-6-xs">\
+                        <div class="row">\
+                            <div class="col">\
+                                <img src="images/icon2.jpg"></img>\
+                            </div>\
+                            <div class="col">\
+                                <img src="images/icon1.jpg"></img>\
+                            </div>\
+                            <div class="col">\
+                                <img src="images/icon3.jpg"></img>\
+                            </div>\
+                            <div class="col">\
+                                <img src="images/icon4.jpg"></img>\
+                            </div>\
+                        </div>\
+                    </div>\
+                    <div class="col">\
+                        <img scr="images/spacer.gif"></img>\
+                    </div>\
+                </div>'
+    });
+    
+    // big text at the end of the email
+    Vue.component('credits',{
+        data:function(){
+            return{
+                myCredits:{
+                    backgroundColor:'black',
+                    padding: '40px',
+                    maxWidth: '1200px',
+                    width: '100%',
+                    margin:'0px',
+                    textAlign: 'left',
+                    color: 'grey',
+                    fontSize: '1.3em'
+                },
+                myBoldText:{
+                    color: 'white'
+                },
+                myAccount:{
+                    color:'white',
+                    textDecoration:'underline'
+                },
+                myClick:{
+                    textDecoration:'underline'
+                }
+            }
+        },
+        template:'<div class="row justify-content-md-left" :style="myCredits">\
+                    <div class="col">\
+                        <p>You have received this email in <span :style="myBoldText"><strong>English</strong></span>. You can change your language preference on <span :style="myAccount">account management</span></p>\
+                        <p>@ 2018 Game_Company Entertainment. All Rights Reserved. Game_Company and the Game_Company logo are registered or unregistered trademark of Game_Company Entertainement in the US and/or other countries</p>\
+                        <p>This email uses cookies and other data collection technologies, so that we and our partners can adapt content, including advertising, to you. For more information and ways to opt out, please click <span :style="myClick">here</span>.</p>\
+                        <p>Game_Company, In. c/o Digital Publishing, 625 Third Street, San Francisco, CA 94107</p>\
+                    </div>\
+                </div>'
+    });
+
+    // unsub / policy / view in browser
+    Vue.component('links-unsub-policy-view',{
+        data:function(){
+            return{
+                myLinks:{
+                    color:'grey',
+                    backgroundColor:'black',
+                    padding: '0px',
+                    maxWidth: '1200px',
+                    width: '100%',
+                    margin:'0px',
+                    whiteSpace: 'nowrap',
+                    textAlign:'center',
+                    textDecoration:'underline',
+                    fontSize:'1.1em'
+                }
+            }
+        },
+        template:'<div class="row" :style="myLinks">\
+                    <div class="col">\
+                        <img scr="images/spacer.gif"></img>\
+                    </div>\
+                    <div class="col-8">\
+                        <div class="row" >\
+                                <div class="col">\
+                                    <p>Unsubscribe</p>\
+                                </div>\
+                                <div class="col">\
+                                    <p>|</p>\
+                                </div>\
+                                <div class="col">\
+                                    <p>Privacy Policy</p>\
+                                </div>\
+                                <div class="col">\
+                                    <p>|</p>\
+                                </div>\
+                                <div class="col">\
+                                    <p>View in Your Browser</p>\
+                                </div>\
+                            </div>\
+                    </div>\
+                    <div class="col">\
+                        <img scr="images/spacer.gif"></img>\
+                    </div>\
+                </div>'
+    });
+
+    var vm = new Vue({
+        el: '#app',
+        data:{
+            windowWidth: 0,
+            responsiveContainer:{
+                maxWidth : '1200px',
+                minWidth:'850px',
+                width: '100%',
+                padding: '0px',
+                fontFamily: 'Arial'
+            },
+            subcontainer:{
+                backgroundColor: '#E3E7F1',
+                width: '100%',
+                padding: '10px'
+            },
+            blackSubcontainer:{
+                backgroundColor: 'black',
+                width: '100%'
+            }
+        },
+        mounted(){
+            this.$nextTick(function(){
+                window.addEventListener('resize', this.getWindowWidth);
+
+                //init
+                this.getWindowWidth();
+            })
+        },
+        methods:{
+            getWindowWidth(event){
+                this.windowWidth = document.documentElement.clientWidth;
+            }
+        },
+        beforeDestroy(){
+            window.removeEventListener('resize', this.getWindowWidth);
+        }
+    }); 
+</script>
